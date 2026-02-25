@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -58,12 +59,13 @@ class BeerControllerTest {
   @Test
   void listBeers() throws Exception {
 
-    given(beerService.listBeers()).willReturn(getBeers());
+    given(beerService.listBeers(any(), any(), any())).willReturn(getBeers());
     mockMvc.perform(MockMvcRequestBuilders.get(BEER_BASE_PATH)
             .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.length()").value(3));
+        .andExpect(jsonPath("$.length()").value(3))
+        .andExpect(jsonPath("$.[0].quantityOnHand").value(IsNull.notNullValue()));
   }
 
 

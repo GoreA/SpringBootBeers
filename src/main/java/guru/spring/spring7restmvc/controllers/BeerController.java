@@ -2,6 +2,7 @@ package guru.spring.spring7restmvc.controllers;
 
 import guru.spring.spring7restmvc.exceptions.NotFoundException;
 import guru.spring.spring7restmvc.models.BeerDTO;
+import guru.spring.spring7restmvc.models.BeerStyle;
 import guru.spring.spring7restmvc.services.BeerService;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -30,9 +32,10 @@ public class BeerController {
   private final BeerService beerService;
 
   @GetMapping
-  public List<BeerDTO> listBeers() {
-    log.info("from Controller listBeers()");
-    return beerService.listBeers();
+  public List<BeerDTO> listBeers(@RequestParam(required = false) String beerName,
+                                 @RequestParam(required = false) BeerStyle beerStyle,
+                                 @RequestParam(required = false) Boolean showInventory){
+    return beerService.listBeers(beerName, beerStyle, showInventory);
   }
 
   @RequestMapping(path = "{id}", method = RequestMethod.GET)

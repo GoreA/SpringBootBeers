@@ -1,11 +1,16 @@
 package guru.spring.spring7restmvc.repositories;
 
+import guru.spring.spring7restmvc.bootstrap.BootstrapData;
 import guru.spring.spring7restmvc.entities.Beer;
 import guru.spring.spring7restmvc.models.BeerStyle;
+import guru.spring.spring7restmvc.services.BeerCsvService;
+import guru.spring.spring7restmvc.services.BeerCsvServiceImpl;
 import jakarta.validation.ConstraintViolationException;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataJpaTest
+@Import({BootstrapData.class, BeerCsvServiceImpl.class})
 class BeerRepositoryTest {
 
   @Autowired
@@ -44,5 +50,26 @@ class BeerRepositoryTest {
     beerRepository.flush();
     assertThat(savedBeer).isNotNull();
     assertThat(savedBeer.getId()).isNotNull();
+  }
+
+  @Test
+  void testFindBeerByName() {
+    List<Beer> beerList = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%Brew%");
+    assertThat(beerList).isNotEmpty();
+    assertThat(beerList.size()).isEqualTo(16);
+  }
+
+  @Test
+  void testFindBeerByNameAndBeerStyle() {
+    List<Beer> beerList = beerRepository.findAllByBeerStyle(BeerStyle.LAGER);
+    assertThat(beerList).isNotEmpty();
+    assertThat(beerList.size()).isEqualTo(39);
+  }
+
+  @Test
+  void testFindBeerByNameAndBeerStyleAndName() {
+    List<Beer> beerList = beerRepository.findAllByBeerStyleAndBeerNameIsLikeIgnoreCase(BeerStyle.LAGER, "%Black%");
+    assertThat(beerList).isNotEmpty();
+    assertThat(beerList.size()).isEqualTo(2);
   }
 }

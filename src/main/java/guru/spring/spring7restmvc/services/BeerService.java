@@ -1,12 +1,13 @@
 package guru.spring.spring7restmvc.services;
 
 import guru.spring.spring7restmvc.models.BeerDTO;
+import guru.spring.spring7restmvc.models.BeerStyle;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface BeerService {
-  List<BeerDTO> listBeers();
+  List<BeerDTO> listBeers(String beerName, BeerStyle beerStyle, Boolean showInventory);
 
   public Optional<BeerDTO> getBeerById(UUID id);
 

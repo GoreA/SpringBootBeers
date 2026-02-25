@@ -30,11 +30,11 @@ public class BootstrapData implements CommandLineRunner {
 
   @Transactional
   @Override
-    public void run(String... args) throws Exception {
-      loadBeerData();
-      loadCsvData();
-      loadCustomerData();
-    }
+  public void run(String... args) throws Exception {
+    loadBeerData();
+    loadCsvData();
+    loadCustomerData();
+  }
 
   private void loadCsvData() throws FileNotFoundException {
     if (beerRepository.count() < 10) {

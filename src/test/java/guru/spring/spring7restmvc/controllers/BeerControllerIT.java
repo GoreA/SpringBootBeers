@@ -1,8 +1,13 @@
 package guru.spring.spring7restmvc.controllers;
 
+import static guru.spring.spring7restmvc.controllers.BeerControllerTest.BEER_BASE_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import static org.hamcrest.core.Is.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import guru.spring.spring7restmvc.entities.Beer;
@@ -11,7 +16,6 @@ import guru.spring.spring7restmvc.models.BeerDTO;
 import guru.spring.spring7restmvc.models.BeerStyle;
 import guru.spring.spring7restmvc.repositories.BeerRepository;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,7 +59,7 @@ public class BeerControllerIT {
 
   @Test
   void testListBeers() throws Exception {
-    List<BeerDTO> beers = beerController.listBeers();
+    List<BeerDTO> beers = beerController.listBeers(null, null, false);
     assertThat(beers).isNotNull();
     assertThat(beers.size()).isEqualTo(2413);
   }
@@ -65,7 +69,7 @@ public class BeerControllerIT {
   @Test
   void testEmptyList() throws Exception {
     beerRepository.deleteAll();
-    List<BeerDTO> beers = beerController.listBeers();
+    List<BeerDTO> beers = beerController.listBeers(null, null, false);
     assertThat(beers).isNotNull();
     assertThat(beers.size()).isEqualTo(0);
   }
@@ -170,5 +174,30 @@ public class BeerControllerIT {
 
     String responseBody = result.getResponse().getContentAsString();
     System.out.println(responseBody);
+  }
+
+  @Test
+  void testListBeerByName() throws Exception {
+    mockMvc.perform(get(BEER_BASE_PATH)
+        .queryParam("beerName", "Brew"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.size()", is(16)));
+  }
+
+  @Test
+  void testListBeerByStyleAndName() throws Exception {
+    mockMvc.perform(get(BEER_BASE_PATH)
+            .queryParam("beerName", "Black")
+            .queryParam("beerStyle", BeerStyle.LAGER.name()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.size()", is(2)));
+  }
+
+  @Test
+  void testListBeerByStyle() throws Exception {
+    mockMvc.perform(get(BEER_BASE_PATH)
+            .queryParam("beerStyle", BeerStyle.LAGER.name()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.size()", is(39)));
   }
 }
