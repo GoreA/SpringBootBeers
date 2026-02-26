@@ -26,6 +26,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -59,13 +63,13 @@ class BeerControllerTest {
   @Test
   void listBeers() throws Exception {
 
-    given(beerService.listBeers(any(), any(), any())).willReturn(getBeers());
+    given(beerService.listBeers(any(), any(), any(), any(), any())).willReturn(getBeers(0, 25));
     mockMvc.perform(MockMvcRequestBuilders.get(BEER_BASE_PATH)
             .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.length()").value(3))
-        .andExpect(jsonPath("$.[0].quantityOnHand").value(IsNull.notNullValue()));
+        .andExpect(jsonPath("$.content.length()").value(3))
+        .andExpect(jsonPath("$.content.[0].quantityOnHand").value(IsNull.notNullValue()));
   }
 
 
@@ -196,6 +200,11 @@ class BeerControllerTest {
         .andReturn();
 
     System.out.println(mvcResult.getResponse().getContentAsString());
+  }
+
+  public Page<BeerDTO> getBeers(Integer pageNumber, Integer pageSize) {
+    PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+    return new PageImpl<>(getBeers(), pageRequest, getBeers().size());
   }
 
   public List<BeerDTO> getBeers () {

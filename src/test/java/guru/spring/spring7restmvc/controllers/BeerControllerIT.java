@@ -19,10 +19,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -59,9 +61,9 @@ public class BeerControllerIT {
 
   @Test
   void testListBeers() throws Exception {
-    List<BeerDTO> beers = beerController.listBeers(null, null, false);
+    Page<BeerDTO> beers = beerController.listBeers(null, null, false, 0, 25);
     assertThat(beers).isNotNull();
-    assertThat(beers.size()).isEqualTo(2413);
+    assertThat(beers.getContent().size()).isEqualTo(25);
   }
 
   @Rollback
@@ -69,9 +71,9 @@ public class BeerControllerIT {
   @Test
   void testEmptyList() throws Exception {
     beerRepository.deleteAll();
-    List<BeerDTO> beers = beerController.listBeers(null, null, false);
+    Page<BeerDTO> beers = beerController.listBeers(null, null, false, 0, 25);
     assertThat(beers).isNotNull();
-    assertThat(beers.size()).isEqualTo(0);
+    assertThat(beers.getContent().size()).isEqualTo(0);
   }
 
   @Test
@@ -181,7 +183,7 @@ public class BeerControllerIT {
     mockMvc.perform(get(BEER_BASE_PATH)
         .queryParam("beerName", "Brew"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.size()", is(16)));
+        .andExpect(jsonPath("$.content.size()", is(16)));
   }
 
   @Test
@@ -190,14 +192,39 @@ public class BeerControllerIT {
             .queryParam("beerName", "Black")
             .queryParam("beerStyle", BeerStyle.LAGER.name()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.size()", is(2)));
+        .andExpect(jsonPath("$.content.size()", is(2)));
   }
 
   @Test
   void testListBeerByStyle() throws Exception {
     mockMvc.perform(get(BEER_BASE_PATH)
-            .queryParam("beerStyle", BeerStyle.LAGER.name()))
+            .queryParam("beerStyle", BeerStyle.LAGER.name())
+            .queryParam("pageSize", "50")
+            .queryParam("pageNumber", "0"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.size()", is(39)));
+        .andExpect(jsonPath("$.content.size()", is(39)));
+  }
+
+  @Test
+  void testListBeerByStyleAndNameTruePage() throws Exception {
+    mockMvc.perform(get(BEER_BASE_PATH)
+            .queryParam("beerName", "IPA")
+            .queryParam("beerStyle", BeerStyle.IPA.name())
+            .queryParam("showInventoryOnHand", "true")
+            .queryParam("pageNumber", "2")
+            .queryParam("pageSize", "20"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.size()", is(20)))
+        .andExpect(jsonPath("$.totalElements", is(310)));
+  }
+
+  @Test
+  void testListMaxPageSize() throws Exception {
+    mockMvc.perform(get(BEER_BASE_PATH)
+            .queryParam("pageNumber", "2")
+            .queryParam("pageSize", "2000"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.size()", is(1000)))
+        .andExpect(jsonPath("$.totalElements", is(2413)));
   }
 }

@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +26,9 @@ class BeerRepositoryTest {
 
   @Autowired
   BeerRepository beerRepository;
+
+  private static final int DEFAULT_PAGE = 0;
+  private static final int DEFAULT_PAGE_SIZE = 25;
 
   @Rollback
   @Transactional
@@ -54,22 +60,30 @@ class BeerRepositoryTest {
 
   @Test
   void testFindBeerByName() {
-    List<Beer> beerList = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%Brew%");
+    Page<Beer> beerList = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%Brew%", getPageRequest());
     assertThat(beerList).isNotEmpty();
-    assertThat(beerList.size()).isEqualTo(16);
+    assertThat(beerList.getContent().size()).isEqualTo(16);
   }
 
   @Test
   void testFindBeerByNameAndBeerStyle() {
-    List<Beer> beerList = beerRepository.findAllByBeerStyle(BeerStyle.LAGER);
-    assertThat(beerList).isNotEmpty();
-    assertThat(beerList.size()).isEqualTo(39);
+    Page<Beer> beerList = beerRepository.findAllByBeerStyle(BeerStyle.LAGER, getPageRequest(0, 50));
+//    assertThat(beerList.getContent()).isNotEmpty();
+    assertThat(beerList.getContent().size()).isEqualTo(39);
   }
 
   @Test
   void testFindBeerByNameAndBeerStyleAndName() {
-    List<Beer> beerList = beerRepository.findAllByBeerStyleAndBeerNameIsLikeIgnoreCase(BeerStyle.LAGER, "%Black%");
+    Page<Beer> beerList = beerRepository.findAllByBeerStyleAndBeerNameIsLikeIgnoreCase(BeerStyle.LAGER, "%Black%", getPageRequest());
     assertThat(beerList).isNotEmpty();
-    assertThat(beerList.size()).isEqualTo(2);
+    assertThat(beerList.getContent().size()).isEqualTo(2);
+  }
+
+  PageRequest getPageRequest(Integer page, Integer size) {
+    return PageRequest.of(page, size);
+  }
+
+  PageRequest getPageRequest() {
+    return PageRequest.of(DEFAULT_PAGE, DEFAULT_PAGE_SIZE);
   }
 }
