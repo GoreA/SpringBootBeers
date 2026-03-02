@@ -1,6 +1,7 @@
 package guru.spring.spring7restmvc.entities;
 
 import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
 import java.util.Set;
 import lombok.*;
 import org.hibernate.annotations.*;
@@ -26,7 +27,7 @@ public class BeerOrder {
     this.customerRef = customerRef;
     setCustomer(customer); //added to set the bi-directional relationship
     this.beerOrderLines = beerOrderLines;
-    this.beerOrderShipment = beerOrderShipment;
+    setBeerOrderShipment(beerOrderShipment);
   }
 
   @Id
@@ -66,4 +67,10 @@ public class BeerOrder {
 
   @OneToOne
   private BeerOrderShipment beerOrderShipment;
+
+  //added to set the bi-directional relationship
+  public void setBeerOrderShipment(BeerOrderShipment beerOrderShipment) {
+    this.beerOrderShipment = beerOrderShipment;
+    beerOrderShipment.setBeerOrder(this);
+  }
 }

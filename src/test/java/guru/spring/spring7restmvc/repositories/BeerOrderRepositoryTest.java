@@ -3,6 +3,7 @@ package guru.spring.spring7restmvc.repositories;
 import guru.spring.spring7restmvc.bootstrap.BootstrapData;
 import guru.spring.spring7restmvc.entities.Beer;
 import guru.spring.spring7restmvc.entities.BeerOrder;
+import guru.spring.spring7restmvc.entities.BeerOrderShipment;
 import guru.spring.spring7restmvc.entities.Customer;
 import guru.spring.spring7restmvc.services.BeerCsvServiceImpl;
 import java.util.HashMap;
@@ -40,6 +41,9 @@ class BeerOrderRepositoryTest {
   void findAllByBeerOrders() {
     BeerOrder beerOrder = BeerOrder.builder()
         .customerRef("Test Order")
+        .beerOrderShipment(BeerOrderShipment.builder()
+            .trackingNumber("8976342675726")
+            .build())
         .customer(testCustomer)
         .build();
 
