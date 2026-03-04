@@ -7,7 +7,6 @@ import guru.spring.spring7restmvc.models.BeerStyle;
 import guru.spring.spring7restmvc.repositories.BeerRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,7 +50,7 @@ public class BeerServiceImpl implements BeerService {
     if (showInventory == null || !showInventory) {
       beerPage.forEach(beer -> beer.setQuantityOnHand(null));
     }
-    return beerPage.map(beerMapper::beertoBeerDTO);
+    return beerPage.map(beerMapper::beerToBeerDTO);
   }
 
   public PageRequest buildPageRequest(Integer pageNumber, Integer pageSize) {
@@ -94,13 +93,13 @@ public class BeerServiceImpl implements BeerService {
   public Optional<BeerDTO> getBeerById(UUID id) {
     log.info("from Service getBeerById({})", id);
     Beer beer = beerRepository.findById(id).orElse(null);
-    return Optional.ofNullable(beerMapper.beertoBeerDTO(beer));
+    return Optional.ofNullable(beerMapper.beerToBeerDTO(beer));
   }
 
   @Override
   public BeerDTO saveBeer(BeerDTO beerDTO) {
-    Beer newBeer = beerMapper.beerDTOtoBeer(beerDTO);
-    return beerMapper.beertoBeerDTO(beerRepository.save(newBeer));
+    Beer newBeer = beerMapper.beerDTOToBeer(beerDTO);
+    return beerMapper.beerToBeerDTO(beerRepository.save(newBeer));
   }
 
   @Override
@@ -122,9 +121,12 @@ public class BeerServiceImpl implements BeerService {
           foundBeer.setUpc(beerDTO.getUpc() == null
               || beerDTO.getUpc().isEmpty()
               ? foundBeer.getUpc() : beerDTO.getUpc());
+          foundBeer.setVersion(Objects.isNull(beerDTO.getVersion())
+              || beerDTO.getVersion() == 0
+              ? foundBeer.getVersion() + 1 : beerDTO.getVersion());
           foundBeer.setUpdateDate(LocalDateTime.now());
           beerDTORef.set(Optional.ofNullable(beerMapper
-              .beertoBeerDTO(beerRepository.save(foundBeer))));
+              .beerToBeerDTO(beerRepository.save(foundBeer))));
         }, () -> beerDTORef.set(Optional.empty())
     );
     return beerDTORef.get();
