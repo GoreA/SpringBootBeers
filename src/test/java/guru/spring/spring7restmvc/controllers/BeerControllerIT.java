@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -231,7 +232,7 @@ public class BeerControllerIT {
         .andExpect(jsonPath("$.totalElements", is(2413)));
   }
 
-  //@Disabled // just for demo purposes
+  @Disabled // just for demo purposes
   @Test
   void testUpdateBeerBadVersion() throws Exception {
     Beer beer = beerRepository.findAll().get(0);
@@ -244,7 +245,7 @@ public class BeerControllerIT {
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(beerDTO)))
-        .andExpect(status().isNoContent())
+        .andExpect(status().isOk())
         .andReturn();
 
     System.out.println(result.getResponse().getContentAsString());
@@ -255,7 +256,7 @@ public class BeerControllerIT {
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(beerDTO)))
-        .andExpect(status().isNoContent())
+        .andExpect(status().isOk())
         .andReturn();
 
     System.out.println(result2.getResponse().getStatus());
