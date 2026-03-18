@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import static org.hamcrest.core.Is.is;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -60,7 +61,9 @@ public class BeerControllerIT {
 
   @BeforeEach
   void setUp() {
-    mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+    mockMvc = MockMvcBuilders.webAppContextSetup(wac)
+        .apply(springSecurity())
+        .build();
   }
 
   @Test

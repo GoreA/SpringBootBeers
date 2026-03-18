@@ -5,6 +5,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -65,7 +66,8 @@ class BeerControllerTest {
 
     given(beerService.listBeers(any(), any(), any(), any(), any())).willReturn(getBeers(0, 25));
     mockMvc.perform(MockMvcRequestBuilders.get(BEER_BASE_PATH)
-            .accept(MediaType.APPLICATION_JSON))
+            .accept(MediaType.APPLICATION_JSON)
+            .with(httpBasic("user", "password")))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.content.length()").value(3))
