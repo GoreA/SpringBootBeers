@@ -4,16 +4,19 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import guru.spring.spring7restmvc.config.SecurityConfig;
 import guru.spring.spring7restmvc.mappers.CustomerMapper;
 import guru.spring.spring7restmvc.models.CustomerDTO;
 import guru.spring.spring7restmvc.repositories.CustomerRepository;
 import guru.spring.spring7restmvc.services.CustomerServceImpl;
 import guru.spring.spring7restmvc.services.CustomerService;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,16 +24,23 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(CustomerController.class)
+@Import(SecurityConfig.class)
 public class CustomerControllerTest {
   public static final String CUSTOMER_BASE_PATH = "/api/v1/customer";
   public static final String CUSTOMER_BASE_PATH_ID = "/api/v1/customer/{id}";
+  public static final SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor jwtRequestPostProcessor = jwt().jwt(jwt -> jwt.claim("scope", "message-read message-write")
+      .subject("messaging-client")
+      .notBefore(Instant.now().minusSeconds(5)));
+
   @MockitoBean
   private CustomerService customerService;
 
@@ -49,7 +59,8 @@ public class CustomerControllerTest {
   void listCustomers() throws Exception {
     given(customerService.getCustomers()).willReturn(getCustomers());
     mockMvc.perform(MockMvcRequestBuilders.get(CUSTOMER_BASE_PATH)
-            .accept(MediaType.APPLICATION_JSON))
+            .accept(MediaType.APPLICATION_JSON)
+            .with(jwtRequestPostProcessor))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.length()").value(3));
@@ -60,7 +71,8 @@ public class CustomerControllerTest {
     var testCustomer = getCustomers().get(0);
     given(customerService.getCustomer(any(UUID.class))).willReturn(Optional.ofNullable(testCustomer));
     mockMvc.perform(MockMvcRequestBuilders.get(CUSTOMER_BASE_PATH_ID, UUID.randomUUID())
-        .accept(MediaType.APPLICATION_JSON))
+        .accept(MediaType.APPLICATION_JSON)
+            .with(jwtRequestPostProcessor))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.id").value(testCustomer.getId().toString()))
@@ -75,6 +87,7 @@ public class CustomerControllerTest {
     given(customerService.saveNewCustomer(any())).willReturn(testCustomer);
     mockMvc.perform(MockMvcRequestBuilders.post(CUSTOMER_BASE_PATH)
             .accept(MediaType.APPLICATION_JSON)
+            .with(jwtRequestPostProcessor)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(testCustomer)))
         .andExpect(status().isOk())
@@ -89,6 +102,7 @@ public class CustomerControllerTest {
         .willReturn(Optional.of(testCustomer));
     mockMvc.perform(MockMvcRequestBuilders.put(CUSTOMER_BASE_PATH_ID, UUID.randomUUID())
             .accept(MediaType.APPLICATION_JSON)
+            .with(jwtRequestPostProcessor)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(testCustomer)))
         .andExpect(status().isOk());
@@ -101,7 +115,8 @@ public class CustomerControllerTest {
     CustomerDTO testCustomerDTO = getCustomers().get(0);
     given(customerService.deleteCustomer(any(UUID.class))).willReturn(true);
     mockMvc.perform(MockMvcRequestBuilders.delete(CUSTOMER_BASE_PATH_ID, testCustomerDTO.getId())
-            .accept(MediaType.APPLICATION_JSON))
+            .accept(MediaType.APPLICATION_JSON)
+            .with(jwtRequestPostProcessor))
         .andExpect(status().isNoContent());
 
     ArgumentCaptor<UUID> captor = ArgumentCaptor.forClass(UUID.class);

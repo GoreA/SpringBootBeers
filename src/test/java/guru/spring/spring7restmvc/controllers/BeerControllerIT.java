@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import static org.hamcrest.core.Is.is;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -19,6 +20,7 @@ import guru.spring.spring7restmvc.models.BeerDTO;
 import guru.spring.spring7restmvc.models.BeerStyle;
 import guru.spring.spring7restmvc.repositories.BeerRepository;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -53,6 +56,9 @@ public class BeerControllerIT {
   BeerMapper beerMapper;
 
   public static final String BEER_BASE_PATH_ID = "/api/v1/beer/{id}";
+  public static final SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor jwtRequestPostProcessor = jwt().jwt(jwt -> jwt.claim("scope", "message-read message-write")
+      .subject("messaging-client")
+      .notBefore(Instant.now().minusSeconds(5)));
 
   @Autowired
   WebApplicationContext wac;
@@ -175,6 +181,7 @@ public class BeerControllerIT {
     Map<String, Object> beerMap = Map.of("beerName",
         "My Beer 756454532346790-09876543237890-=-0987654321234567890-09876543234567890-98763212346578987678");
     MvcResult result = mockMvc.perform(patch(BEER_BASE_PATH_ID, beer.getId())
+            .with(jwtRequestPostProcessor)
             .accept(MediaType.APPLICATION_JSON)
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(beerMap)))
@@ -188,6 +195,7 @@ public class BeerControllerIT {
   @Test
   void testListBeerByName() throws Exception {
     mockMvc.perform(get(BEER_BASE_PATH)
+            .with(jwtRequestPostProcessor)
         .queryParam("beerName", "Brew"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content.size()", is(16)));
@@ -196,6 +204,7 @@ public class BeerControllerIT {
   @Test
   void testListBeerByStyleAndName() throws Exception {
     mockMvc.perform(get(BEER_BASE_PATH)
+            .with(jwtRequestPostProcessor)
             .queryParam("beerName", "Black")
             .queryParam("beerStyle", BeerStyle.LAGER.name()))
         .andExpect(status().isOk())
@@ -205,6 +214,7 @@ public class BeerControllerIT {
   @Test
   void testListBeerByStyle() throws Exception {
     mockMvc.perform(get(BEER_BASE_PATH)
+            .with(jwtRequestPostProcessor)
             .queryParam("beerStyle", BeerStyle.LAGER.name())
             .queryParam("pageSize", "50")
             .queryParam("pageNumber", "0"))
@@ -215,6 +225,7 @@ public class BeerControllerIT {
   @Test
   void testListBeerByStyleAndNameTruePage() throws Exception {
     mockMvc.perform(get(BEER_BASE_PATH)
+            .with(jwtRequestPostProcessor)
             .queryParam("beerName", "IPA")
             .queryParam("beerStyle", BeerStyle.IPA.name())
             .queryParam("showInventoryOnHand", "true")
@@ -228,6 +239,7 @@ public class BeerControllerIT {
   @Test
   void testListMaxPageSize() throws Exception {
     mockMvc.perform(get(BEER_BASE_PATH)
+            .with(jwtRequestPostProcessor)
             .queryParam("pageNumber", "2")
             .queryParam("pageSize", "2000"))
         .andExpect(status().isOk())
@@ -245,6 +257,7 @@ public class BeerControllerIT {
     beerDTO.setBeerName("Updated Name");
 
     MvcResult result = mockMvc.perform(put(BEER_BASE_PATH_ID, beer.getId())
+            .with(jwtRequestPostProcessor)
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(beerDTO)))
@@ -256,6 +269,7 @@ public class BeerControllerIT {
     beerDTO.setBeerName("Updated Name 2");
 
     MvcResult result2 = mockMvc.perform(put(BEER_BASE_PATH_ID, beer.getId())
+            .with(jwtRequestPostProcessor)
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(beerDTO)))
